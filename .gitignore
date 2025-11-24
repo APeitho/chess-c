@@ -1,0 +1,28 @@
+# Binaries and executables
+*.o
+*.a
+*.so
+*.out
+*.exe
+*:Zone.Identifier
+
+# Debugging and temporary files
+*.stackdump
+core
+*.log
+*.d
+
+# Build output directories
+build/
+bin/
+
+# Editor and IDE specific files
+.vscode/
+.idea/
+*~
+*.swp
+
+# OS-specific files
+.DS_Store
+
+# Add any other files or directories you want to ignore
