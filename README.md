@@ -1,5 +1,7 @@
 # Chess Game Engine
 
+Disclaimer: LLM helped write this code.
+
 A complete chess game implementation in C with move validation, special moves, and interactive gameplay.
 
 ## Features
