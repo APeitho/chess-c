@@ -5,7 +5,7 @@
 #include "chess_logic.h"
 #include "legal_moves.h"
 
-// Helper: remove spaces from input into output buffer (null-terminated)
+// Copies a string, removing whitespace characters.
 static void copy_without_spaces(const char* src, char* dst, size_t dst_size) {
     size_t w = 0;
     for (size_t r = 0; src[r] != '\0' && w + 1 < dst_size; r++) {
@@ -16,21 +16,21 @@ static void copy_without_spaces(const char* src, char* dst, size_t dst_size) {
     dst[w] = '\0';
 }
 
-// Function to parse coordinate notation (e.g., "e2e4", "a1h8")
+// Parses coordinate notation (e.g., "e2e4") into a Move struct.
 int parse_move_notation(const char* notation, Move* move) {
     if (strlen(notation) < 4) {
         return 0;
     }
 
-    // Parse from square (e.g., "e2")
+    // Parse 'from' square.
     move->from_col = tolower(notation[0]) - 'a';
     move->from_row = notation[1] - '1';
 
-    // Parse to square (e.g., "e4")
+    // Parse 'to' square.
     move->to_col = tolower(notation[2]) - 'a';
     move->to_row = notation[3] - '1';
 
-    // Validate coordinates
+    // Validate that coordinates are within board boundaries.
     if (move->from_row < 0 || move->from_row > 7 || move->from_col < 0 || move->from_col > 7 ||
         move->to_row < 0 || move->to_row > 7 || move->to_col < 0 || move->to_col > 7) {
         return 0;
@@ -39,9 +39,7 @@ int parse_move_notation(const char* notation, Move* move) {
     return 1;
 }
 
-// Resolve SAN-like algebraic notation (e.g., "Bc4", "Bxc4", "Nf3", "exd5", "R1e1")
-// Supports: piece letter [KQRBN] optional (default pawn), optional disambiguation (file or rank),
-// optional 'x' capture marker, destination square (file+rank), optional '+' or '#'.
+// Parses simple algebraic notation (e.g., "Nf3", "Bxc4") into a Move struct.
 static int parse_algebraic(const GameState* state, const char* raw_notation, Move* out_move) {
     char s[64];
     copy_without_spaces(raw_notation, s, sizeof(s));
@@ -49,11 +47,11 @@ static int parse_algebraic(const GameState* state, const char* raw_notation, Mov
     if (n < 2) return 0;
 
     // Strip trailing check/mate symbols
-    while (n > 0 && (s[n-1] == '+' || s[n-1] == '#')) {
+    if (s[n-1] == '+' || s[n-1] == '#') {
         s[--n] = '\0';
     }
 
-    // Find destination square as last [file][rank]
+    // Destination square is always the last two characters.
     if (n < 2) return 0;
     char dest_file = tolower(s[n-2]);
     char dest_rank = s[n-1];
@@ -63,7 +61,7 @@ static int parse_algebraic(const GameState* state, const char* raw_notation, Mov
     int to_col = dest_file - 'a';
     int to_row = dest_rank - '1';
 
-    // Determine piece type
+    // Determine piece type from the first letter (if present).
     int idx = 0;
     PieceType piece_type = PAWN;
     if (s[idx] >= 'A' && s[idx] <= 'Z') {
@@ -78,7 +76,7 @@ static int parse_algebraic(const GameState* state, const char* raw_notation, Mov
         idx++;
     }
 
-    // Remaining pattern before destination: optional disambiguation and optional 'x'
+    // Parse optional disambiguation file/rank and capture 'x'.
     int disambig_file = -1; // 0..7 if provided
     int disambig_rank = -1; // 0..7 if provided
     for (; idx < (int)n - 2; idx++) {
@@ -89,12 +87,11 @@ static int parse_algebraic(const GameState* state, const char* raw_notation, Mov
         } else if (c >= '1' && c <= '8') {
             disambig_rank = c - '1';
         } else {
-            // Unknown token, bail
             return 0;
         }
     }
 
-    // Search for matching piece that can legally move to destination
+    // Find the unique piece that can legally make the specified move.
     int found = 0;
     Move candidate = {0,0,to_row,to_col};
     Colour side = state->current_turn;
@@ -119,17 +116,17 @@ static int parse_algebraic(const GameState* state, const char* raw_notation, Mov
     return 0; // none or ambiguous
 }
 
-// Function to parse castling notation (O-O or O-O-O)
+// Parses castling notation ("O-O" or "O-O-O") into a Move struct.
 int parse_castling(const char* notation, Move* move, Colour color) {
     if (strcmp(notation, "O-O") == 0 || strcmp(notation, "o-o") == 0 || strcmp(notation, "0-0") == 0) {
-        // Kingside castling
+        // Kingside
         move->from_row = (color == WHITE) ? 0 : 7;
         move->from_col = 4;
         move->to_row = move->from_row;
         move->to_col = 6;
         return 1;
     } else if (strcmp(notation, "O-O-O") == 0 || strcmp(notation, "o-o-o") == 0 || strcmp(notation, "0-0-0") == 0) {
-        // Queenside castling
+        // Queenside
         move->from_row = (color == WHITE) ? 0 : 7;
         move->from_col = 4;
         move->to_row = move->from_row;
@@ -139,7 +136,7 @@ int parse_castling(const char* notation, Move* move, Colour color) {
     return 0;
 }
 
-// Function to get all legal moves for a piece at a given square
+// Prints all legal moves for the piece at the given square.
 void print_legal_moves(const GameState* state, int row, int col) {
     Piece piece = state->board[row][col];
     if (piece.type == EMPTY || piece.color != state->current_turn) {
@@ -175,7 +172,7 @@ void print_legal_moves(const GameState* state, int row, int col) {
     printf("\n");
 }
 
-// Function to display game status
+// Displays the current turn and any check, checkmate, or stalemate status.
 void display_status(const GameState* state) {
     Colour current = state->current_turn;
     printf("\n--- %s to move ---\n", (current == WHITE) ? "White" : "Black");
@@ -193,7 +190,7 @@ void display_status(const GameState* state) {
     fflush(stdout);
 }
 
-// Main game loop
+// Main game loop.
 int main() {
     GameState state;
     initialize_board(&state);
@@ -209,7 +206,7 @@ int main() {
         print_board(&state);
         display_status(&state);
 
-        // Check for game over
+        // Check for game over conditions.
         if (state.status != IN_PROGRESS) {
             break;
         }
@@ -224,18 +221,18 @@ int main() {
             break;
         }
 
-        // Remove newline
+        // Remove trailing newline from input.
         size_t len = strlen(input);
         if (len > 0 && input[len - 1] == '\n') {
             input[len - 1] = '\0';
         }
 
-        // Handle empty input
+        // Ignore empty input.
         if (strlen(input) == 0) {
             continue;
         }
 
-        // Handle commands
+        // Handle user commands.
         if (strcmp(input, "quit") == 0 || strcmp(input, "q") == 0) {
             printf("Game ended.\n");
             fflush(stdout);
@@ -260,8 +257,7 @@ int main() {
             if (state.draw_offer_by == NONE) {
                 state.draw_offer_by = state.current_turn;
                 printf("%s offers a draw. The next player may type 'draw' to accept.\n",
-                       state.current_turn == WHITE ? "White" : "Black");
-                // The offer stands, but it's still the current player's turn to move.
+                       (state.current_turn == WHITE) ? "White" : "Black");
             } else if (state.draw_offer_by != state.current_turn) {
                 printf("Draw by agreement.\n");
                 state.status = DRAW_AGREEMENT;
@@ -273,7 +269,7 @@ int main() {
             continue;
         }
 
-        // Handle "moves" command
+        // Handle "moves <square>" command.
         if (strncmp(input, "moves ", 6) == 0) {
             if (strlen(input) >= 8) {
                 char square[3];
@@ -299,15 +295,15 @@ int main() {
         Move move;
         int valid_notation = 0;
 
-        // Try parsing as castling notation first
+        // Attempt to parse input as different notation types.
         if (parse_castling(input, &move, state.current_turn)) {
             valid_notation = 1;
         }
-        // Try parsing as coordinate notation
+        // Coordinate notation (e.g., "e2e4").
         else if (parse_move_notation(input, &move)) {
             valid_notation = 1;
         }
-        // Try parsing as SAN-like algebraic notation (e.g., Bc4, Nf3, exd5)
+        // Algebraic notation (e.g., "Nf3").
         else if (parse_algebraic(&state, input, &move)) {
             valid_notation = 1;
         }
@@ -319,10 +315,43 @@ int main() {
             continue;
         }
 
-        // Validate and execute move
+        // If the move is legal, make it and switch turns.
         if (is_legal_move(&state, &move, 1)) {
+            // Before making the move, check if it's a pawn promotion.
+            Piece piece_to_move = state.board[move.from_row][move.from_col];
+            if (piece_to_move.type == PAWN && (move.to_row == 0 || move.to_row == 7)) {
+                printf("Promote pawn to [Q]ueen, [R]ook, [B]ishop, or [N]ight? ");
+                fflush(stdout);
+
+                char promotion_input[10];
+                if (fgets(promotion_input, sizeof(promotion_input), stdin) != NULL) {
+                    char choice = tolower(promotion_input[0]);
+                    switch (choice) {
+                        case 'r':
+                            move.promotion_piece = ROOK;
+                            printf("Promoting to Rook.\n");
+                            break;
+                        case 'b':
+                            move.promotion_piece = BISHOP;
+                            printf("Promoting to Bishop.\n");
+                            break;
+                        case 'n':
+                            move.promotion_piece = KNIGHT;
+                            printf("Promoting to Knight.\n");
+                            break;
+                        case 'q':
+                        default:
+                            move.promotion_piece = QUEEN;
+                            printf("Promoting to Queen.\n");
+                            break;
+                    }
+                } else {
+                    move.promotion_piece = QUEEN; // Default on input error
+                }
+            }
+
             make_move(&state, &move);
-            // A move is made, so any pending draw offer is automatically declined.
+            // A successful move automatically declines any pending draw offer.
             state.draw_offer_by = NONE;
 
             move_count++;

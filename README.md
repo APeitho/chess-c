@@ -10,7 +10,7 @@ A complete chess game implementation in C with move validation, special moves, a
   - Check and checkmate detection
   - Stalemate detection
   - Castling (kingside and queenside)
-  - Pawn promotion (auto-promotes to Queen)
+  - Pawn promotion (with choice of piece)
   - En passant capture
 
 - **Interactive Gameplay**
@@ -28,14 +28,29 @@ A complete chess game implementation in C with move validation, special moves, a
 
 ## Building
 
+### Prerequisites
+
+To build and run this project, you will need a C compiler and the `make` utility.
+
+- On **Linux** (Debian/Ubuntu), you can install the necessary tools with:
+  ```bash
+  sudo apt-get update && sudo apt-get install build-essential
+  ```
+- On **macOS**, you can install Command Line Tools for Xcode by running:
+  ```bash
+  xcode-select --install
+  ```
+
+### Compiling the Game
+
 ```bash
 # Build both test suite and interactive game
 make
 
-# Build only the test suite
+# Or, build only the test suite
 make test
 
-# Build only the interactive game
+# Or, build only the interactive game
 make game
 
 # Clean build artifacts

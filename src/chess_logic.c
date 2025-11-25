@@ -16,7 +16,7 @@ void init_zobrist();
 uint64_t compute_zobrist_hash(const GameState *game);
 
 void initialize_board(GameState* state) {
-    // Set all squares to empty first
+    // Clear the board.
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             state->board[i][j].type = EMPTY;
@@ -24,7 +24,7 @@ void initialize_board(GameState* state) {
         }
     }
 
-    // Place pawns
+    // Place pawns.
     for (int j = 0; j < 8; j++) {
         state->board[1][j].type = PAWN;
         state->board[1][j].color = WHITE;
@@ -32,7 +32,7 @@ void initialize_board(GameState* state) {
         state->board[6][j].color = BLACK;
     }
 
-    // Place white
+    // Place white major and minor pieces.
     state->board[0][0] = (Piece){ROOK, WHITE};
     state->board[0][1] = (Piece){KNIGHT, WHITE};
     state->board[0][2] = (Piece){BISHOP, WHITE};
@@ -42,7 +42,7 @@ void initialize_board(GameState* state) {
     state->board[0][6] = (Piece){KNIGHT, WHITE};
     state->board[0][7] = (Piece){ROOK, WHITE};
 
-    // Place black
+    // Place black major and minor pieces.
     state->board[7][0] = (Piece){ROOK, BLACK};
     state->board[7][1] = (Piece){KNIGHT, BLACK};
     state->board[7][2] = (Piece){BISHOP, BLACK};
@@ -61,11 +61,11 @@ void initialize_board(GameState* state) {
     state->black_kingside_rook_moved = 0;
     state->black_queenside_rook_moved = 0;
 
-    // Initialize en passant fields to no target (-1)
+    // No en passant target initially.
     state->en_passant_target_row = -1;
     state->en_passant_target_col = -1;
 
-    // Initialize game status and draw offers
+    // Set initial game status.
     state->status = IN_PROGRESS;
     state->draw_offer_by = NONE;
 
@@ -73,7 +73,7 @@ void initialize_board(GameState* state) {
 
 void print_board(const GameState* state) {
     printf("  a b c d e f g h\n");
-    for (int i = 7; i >= 0; i--) { // Loop from top to bottom row (8 to 1)
+    for (int i = 7; i >= 0; i--) { // Print from rank 8 down to 1.
         printf("%d ", i + 1);
         for (int j = 0; j < 8; j++) {
             Piece piece = state->board[i][j];
@@ -103,21 +103,21 @@ void print_board(const GameState* state) {
 void make_move(GameState* state, const Move* move) {
     Piece piece_to_move = state->board[move->from_row][move->from_col];
 
-    // Clear en passant target from previous move
+    // Reset en passant target from the previous turn.
     state->en_passant_target_row = -1;
     state->en_passant_target_col = -1;
 
-    // En passant capture
+    // Handle en passant capture: the captured pawn is not on the 'to' square.
     if (piece_to_move.type == PAWN && move->to_col == state->en_passant_target_col && move->to_row == state->en_passant_target_row) {
         int captured_row = (piece_to_move.color == WHITE) ? move->to_row - 1 : move->to_row + 1;
         state->board[captured_row][move->to_col].type = EMPTY;
         state->board[captured_row][move->to_col].color = NONE;
     }
 
-    // Set en passant target if pawn makes double-step move
+    // Set a new en passant target if a pawn makes a two-square advance.
     if (piece_to_move.type == PAWN && abs(move->from_row - move->to_row) == 2) {
         int direction = (piece_to_move.color == WHITE) ? 1 : -1;
-        state->en_passant_target_row = move->from_row + direction;
+        state->en_passant_target_row = move->from_row + direction; // The square behind the pawn.
         state->en_passant_target_col = move->to_col;
     }
 
@@ -134,7 +134,7 @@ void make_move(GameState* state, const Move* move) {
         }
     }
 
-    // Mark pieces as having moved for castling purposes
+    // Update castling rights if a king or rook moves for the first time.
     if (piece_to_move.type == KING) {
         if (piece_to_move.color == WHITE) {
             state->white_king_moved = 1;
@@ -151,18 +151,19 @@ void make_move(GameState* state, const Move* move) {
         }
     }
 
-    // Check for pawn promotion
+    // Handle pawn promotion.
     if (piece_to_move.type == PAWN && (move->to_row == 7 || move->to_row == 0)) {
-        state->board[move->to_row][move->to_col].type = QUEEN;
+        PieceType promotion_type = (move->promotion_piece != EMPTY) ? move->promotion_piece : QUEEN;
+        state->board[move->to_row][move->to_col].type = promotion_type;
         state->board[move->to_row][move->to_col].color = piece_to_move.color;
     } else {
         state->board[move->to_row][move->to_col] = piece_to_move;
     }
 
-        // Clear the "from" square
+    // Clear the original square.
     state->board[move->from_row][move->from_col].type = EMPTY;
     state->board[move->from_row][move->from_col].color = NONE;
 
-    // Switch turns
+    // Switch player turn.
     state->current_turn = (state->current_turn == WHITE) ? BLACK : WHITE;
 }

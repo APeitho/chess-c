@@ -3,7 +3,7 @@
 
 #include "chess_logic.h"
 
-// Function prototypes for move validation
+// --- Move Validation Prototypes ---
 int is_legal_move(const GameState* state, const Move* move, int verbose);
 int is_pawn_move_legal(const GameState* state, const Move* move);
 int is_bishop_move_legal(const GameState* state, const Move* move);

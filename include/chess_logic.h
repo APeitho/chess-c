@@ -1,11 +1,8 @@
-// chess_logic
-
 #ifndef CHESS_LOGIC_H
 #define CHESS_LOGIC_H
 
 #include <stdint.h> // For uint64_t
 
-// Enumeration for piece types
 typedef enum {
     EMPTY,
     PAWN,
@@ -16,16 +13,14 @@ typedef enum {
     KING
 } PieceType;
 
-// Enumeration for piece colours
-
+// Represents the color of a piece.
 typedef enum {
-    NONE, // For empty sqaures
+    NONE, // For empty squares
     WHITE,
     BLACK
 } Colour;
 
-// Structure to represent a single piece
-
+// Represents a single piece on the board.
 typedef struct {
     PieceType type;
     Colour color;
@@ -36,9 +31,10 @@ typedef struct {
     int from_col;
     int to_row;
     int to_col;
+    PieceType promotion_piece; // Piece to promote to. EMPTY if not a promotion.
 } Move;
 
-// Enumeration for game status
+// Represents the current status of the game.
 typedef enum {
     IN_PROGRESS,
     CHECKMATE,
@@ -49,15 +45,15 @@ typedef enum {
     DRAW_AGREEMENT
 } GameStatus;
 
-// Define a max moves for threefold repetition history
+// Maximum number of moves to track for threefold repetition.
 #define MAX_GAME_MOVES 1024
 
-// Structure to represent the chessboard and game state
+// Represents the entire state of the chess game.
 typedef struct {
-    Piece board[8][8]; // 8x8 grid-board
+    Piece board[8][8];      // The 8x8 chess board.
     Colour current_turn;
 
-    //Castling rights (1 means moved, 0 means not moved)
+    // Castling availability flags. 1 if moved, 0 otherwise.
     int white_king_moved;
     int white_kingside_rook_moved;
     int white_queenside_rook_moved;
@@ -65,29 +61,26 @@ typedef struct {
     int black_kingside_rook_moved;
     int black_queenside_rook_moved;
 
-    // En passant
+    // En passant target square. (-1, -1) if no target.
     int en_passant_target_row;
     int en_passant_target_col;
 
-    // 50 move draw clock
+    // Counter for the 50-move rule.
     int halfmove_clock;
 
-    // Threefold Repetition
-    uint64_t position_history[MAX_GAME_MOVES]; // e.g., #define MAX_GAME_MOVES 1024
+    // History of board hashes for threefold repetition detection.
+    uint64_t position_history[MAX_GAME_MOVES];
     int move_count;
 
-    // Game status
     GameStatus status;
 
-    // Draw offer tracking
+    // Tracks which player has offered a draw.
     Colour draw_offer_by;
 } GameState;
 
-
-// Created prototypes
+// Function prototypes
 void initialize_board(GameState* state);
 void print_board(const GameState* state);
 void make_move(GameState* state, const Move* move);
-//More functions for move validation, etc., will go here
 
 #endif // CHESS_LOGIC_H

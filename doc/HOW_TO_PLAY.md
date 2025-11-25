@@ -15,12 +15,22 @@
 
 ### Starting the Game
 
-1. Build the program (if not already built):
+1. **Prerequisites**: Before you can build the game, make sure you have a C compiler and `make` installed.
+   - On **Linux** (like Ubuntu), open a terminal and run:
+     ```bash
+     sudo apt-get update && sudo apt-get install build-essential
+     ```
+   - On **macOS**, open a terminal and run:
+     ```bash
+     xcode-select --install
+     ```
+
+2. **Build the program**: Navigate to the project directory in your terminal and run the `make` command. This will create the executable file for the game.
    ```bash
    make
    ```
 
-2. Run the interactive chess game:
+3. **Run the game**: Once the build is complete, start the interactive chess game by running the following command:
    ```bash
    ./chess
    ```
@@ -63,7 +73,7 @@ The goal is to **checkmate** your opponent's king. This means the opponent's kin
 - **Forward movement**: Moves one square forward (toward opponent's side)
 - **Initial move**: Can move two squares forward on its first move
 - **Capture**: Captures diagonally one square forward
-- **Promotion**: When a pawn reaches the opposite end of the board (8th rank for White, 1st rank for Black), it automatically promotes to a Queen
+- **Promotion**: When a pawn reaches the opposite end of the board, you can promote it to a Queen, Rook, Bishop, or Knight.
 
 #### 2. **Rook (R/r)**
 - Moves horizontally or vertically any number of squares
@@ -208,8 +218,8 @@ When a pawn moves two squares forward from its starting position, and an enemy p
 ### 3. Pawn Promotion
 
 When a pawn reaches the opposite end of the board:
-- Automatically promotes to a Queen
-- The program handles this automatically
+- The game will prompt you to choose a piece to promote to.
+- You can choose a Queen (Q), Rook (R), Bishop (B), or Knight (N).
 
 ---
 
